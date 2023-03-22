@@ -1,0 +1,27 @@
+service: tatte-price-lambda
+
+provider:
+  name: aws
+  runtime: provided.al2
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bootstrap
+
+functions:
+  tatte-price-rust:
+    handler: bootsrap
+    events: 
+      - http:
+          path: /tatte/{dish_name}/price
+          method: GET
+          request: 
+            parameters: 
+              paths:
+                dish_name: true
+          response:
+            statusCodes:
+              200:
+                pattern: ''

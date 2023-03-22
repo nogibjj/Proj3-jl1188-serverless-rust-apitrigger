@@ -1,5 +1,5 @@
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response, aws_lambda_events::serde_json::json, IntoResponse};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 
 
 struct TatteList {
@@ -16,12 +16,12 @@ impl TatteList {
     fn new() -> TatteList {
         TatteList { menu: vec![
             Dish {name: String::from("Cheesecake"), price: 7},
-            Dish {name: String::from("Breakfast Sandwich"), price: 10},
-            Dish {name: String::from("French Toast"), price: 13},
-            Dish {name: String::from("Avocado Tartines"), price: 12},
-            Dish {name: String::from("Traditional Shakshuka"), price: 14},
-            Dish {name: String::from("Chicken Pita"), price: 12},
-            Dish {name: String::from("Chicken Salad"), price: 11},
+            Dish {name: String::from("Breakfast_Sandwich"), price: 10},
+            Dish {name: String::from("French_Toast"), price: 13},
+            Dish {name: String::from("Avocado_Tartines"), price: 12},
+            Dish {name: String::from("Traditional_Shakshuka"), price: 14},
+            Dish {name: String::from("Chicken_Pita"), price: 12},
+            Dish {name: String::from("Chicken_Salad"), price: 11},
         ]
         
         }
@@ -46,6 +46,16 @@ async fn build_failure_response(error_message: &str) -> Response<Body> {
     
 }
 
+fn process_event<'a>(dish_name: Option<&'a str>, tatte_list: &'a TatteList) -> Result<&'a Dish, &'a str> {
+    match dish_name {
+        Some(name) => match get_dish_from_name(name, tatte_list) {
+            Some(dish) => Ok(dish),
+            _ => Err("no tatte dish found for the given name")
+        },
+        _ => Err("could not find the dish name")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -57,17 +67,17 @@ mod tests {
         assert_eq!(all_tatte_price.menu.len(), 7);
         let cheesecake = get_dish_from_name("Cheesecake", &all_tatte_price);
         assert_eq!(cheesecake.unwrap().price, 7);
-        let breaksand = get_dish_from_name("Breakfast Sandwich", &all_tatte_price);
+        let breaksand = get_dish_from_name("Breakfast_Sandwich", &all_tatte_price);
         assert_eq!(breaksand.unwrap().price, 10);
-        let french = get_dish_from_name("French Toast", &all_tatte_price);
+        let french = get_dish_from_name("French_Toast", &all_tatte_price);
         assert_eq!(french.unwrap().price, 13);
-        let avocado = get_dish_from_name("Avocado Tartines", &all_tatte_price);
+        let avocado = get_dish_from_name("Avocado_Tartines", &all_tatte_price);
         assert_eq!(avocado.unwrap().price, 12);
-        let shakshuka = get_dish_from_name("Traditional Shakshuka", &all_tatte_price);
+        let shakshuka = get_dish_from_name("Traditional_Shakshuka", &all_tatte_price);
         assert_eq!(shakshuka.unwrap().price, 14);
-        let pita = get_dish_from_name("Chicken Pita", &all_tatte_price);
+        let pita = get_dish_from_name("Chicken_Pita", &all_tatte_price);
         assert_eq!(pita.unwrap().price, 12);
-        let salad = get_dish_from_name("Chicken Salad", &all_tatte_price);
+        let salad = get_dish_from_name("Chicken_Salad", &all_tatte_price);
         assert_eq!(salad.unwrap().price, 11);
     }
 
@@ -96,6 +106,20 @@ mod tests {
         let res = process_event(Some("Cheesecake"), &tatte_list);
         assert!(res.is_ok());
     }
+
+    #[test]
+    fn process_event_invaid_dish_test(){
+        let tatte_list = TatteList::new();
+        let res = process_event(Some("unknown dish"), &tatte_list);
+        assert!(matches!(res, Err("no tatte dish found for the given name")));
+    }
+
+    #[test]
+    fn process_event_no_dish_test(){
+        let tatte_list = TatteList::new();
+        let res = process_event(None, &tatte_list);
+        assert!(matches!(res, Err("could not find the dish name")));
+    }
 }
 
 
@@ -106,28 +130,29 @@ mod tests {
 /// Write your code inside it.
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(_event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
+// async fn function_handler(_event: Request) -> Result<Response<Body>, Error> {
+//     // Extract some useful information from the request
 
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body("Hello AWS Lambda HTTP request".into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
+//     // Return something that implements IntoResponse.
+//     // It will be serialized to the right response event automatically by the runtime
+//     let resp = Response::builder()
+//         .status(200)
+//         .header("content-type", "text/html")
+//         .body("Hello AWS Lambda HTTP request".into())
+//         .map_err(Box::new)?;
+//     Ok(resp)
+// }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
-        .init();
-
-    run(service_fn(function_handler)).await
+    let all_tatte_price = &TatteList::new();
+    let handler_func = |event: Request| async move {
+        let response = match process_event(event.path_parameters().first("dish_name"), all_tatte_price) {
+            Ok(dish) => build_success_response(dish).await,
+            Err(error_message) => build_failure_response(error_message).await
+        };
+        Result::<Response<Body>, Error>::Ok(response)
+    };
+    run(service_fn(handler_func)).await?;
+    Ok(())
 }
