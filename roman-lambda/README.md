@@ -7,17 +7,17 @@ An AWS lambda function in Rust to convert integer into Roman
 * `make lint` to lint it
 * `make realease-arm` to build with arm
 * `make deploy` to deploy to AWS (make sure correctly log in to AWS account first)
-* `make invoke` to invoke the lambda function with argument 27
+* `make invoke` to invoke the lambda function with a payload of name Cheesecake and price 7
 
 ```Working Demo
-(.venv) @selinaes ➜ /workspaces/wk5-Mini-Rust-jl1188/roman-lambda (main) $ make invoke
+(.venv) @selinaes ➜ /workspaces/Proj3-jl1188-serverless-rust-stepfunction/roman-lambda (main) $ make invoke
 cargo lambda invoke --remote \
-                --data-ascii '{"num": 27}' \
+                --data-ascii '{"name":"Cheesecake","price":7}' \
                 --output-format json \
                 roman-lambda
 {
-  "msg": "Convert 27 to Roman: XXVII.",
-  "req_id": "0352ce59-a609-46f1-88d4-102b17c073fe"
+  "msg": "Your Tatte dish Cheesecake is priced at $7, in Roman: VII.",
+  "req_id": "6784126b-a9e7-4c5b-8177-8c3db0656aca"
 }
 
 ```

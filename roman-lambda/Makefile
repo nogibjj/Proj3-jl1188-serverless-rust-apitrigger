@@ -11,8 +11,8 @@ run:
 	cargo run 
 
 release:
-	#cargo build --release --target x86_64-unknown-linux-musl
-	cargo lambda build --release
+	cargo lambda build --release --target x86_64-unknown-linux-gnu.2.17
+	# cargo lambda build --release
 
 release-arm:
 	cargo lambda build --release --arm64
@@ -22,7 +22,7 @@ deploy:
 
 invoke:
 	cargo lambda invoke --remote \
-  		--data-ascii '{"num": 27}' \
+  		--data-ascii '{"name":"Cheesecake","price":7}' \
   		--output-format json \
   		roman-lambda
 

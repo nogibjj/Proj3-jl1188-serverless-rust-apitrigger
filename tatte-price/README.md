@@ -60,3 +60,4 @@ x-amz-cf-id: cit-bIimIv5GhDSXJpV6fo5_YZCa5QGNvlcJHjCJetb7u3mjhjbwuw==
 * [RUST on AWS Lambda | TDD live coding | Build a 🍕 API | No talking](https://www.youtube.com/watch?v=Idys2BAmqIU)
 * [Rust Runtime for AWS Lambda - Building and deploying your Lambda functions](https://github.com/awslabs/aws-lambda-rust-runtime#12-build-your-lambda-functions)
 * [/var/task/bootstrap: /lib64/libc.so.6: version `GLIBC_2.25' not found (required by /var/task/bootstrap) #455](https://github.com/awslabs/aws-lambda-rust-runtime/issues/455)
+* [Serverless Framework](https://www.serverless.com/framework/docs/providers/aws/guide/events)
